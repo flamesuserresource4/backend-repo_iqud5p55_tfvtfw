@@ -12,9 +12,7 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from typing import Optional, List
 
 class User(BaseModel):
     """
@@ -27,22 +25,33 @@ class User(BaseModel):
     age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
     is_active: bool = Field(True, description="Whether user is active")
 
-class Product(BaseModel):
+class CandyBox(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Candy boxes featuring natural Swedish sweets
+    Collection name: "candybox"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
+    title: str = Field(..., description="Box name")
+    description: Optional[str] = Field(None, description="Short description of what's inside")
     price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    is_limited: bool = Field(False, description="If this is a limited edition box")
+    tags: List[str] = Field(default_factory=list, description="Flavor and dietary tags like 'vegan', 'gluten-free'")
+    image: Optional[str] = Field(None, description="Cover image URL")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class OrderItem(BaseModel):
+    box_id: str = Field(..., description="CandyBox document id")
+    quantity: int = Field(..., ge=1, description="How many of this box")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Order(BaseModel):
+    """
+    Orders collection schema
+    Collection name: "order"
+    """
+    customer_name: str = Field(..., description="Customer full name")
+    email: str = Field(..., description="Contact email")
+    address: str = Field(..., description="Shipping address")
+    items: List[OrderItem] = Field(..., description="List of boxes and quantities")
+    notes: Optional[str] = Field(None, description="Optional gift note or delivery instructions")
+    total: float = Field(..., ge=0, description="Order total amount")
+    status: str = Field("pending", description="Order status: pending, confirmed, shipped, delivered")
+
+# Note: The Flames database viewer can read these via /schema endpoint if exposed.
